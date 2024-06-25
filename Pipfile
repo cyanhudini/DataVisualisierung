@@ -6,8 +6,11 @@ name = "pypi"
 [packages]
 tk = "*"
 matplotlib = "*"
+mpldatacursor = "*"
+mplcursors = "*"
+pandas = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.9"
