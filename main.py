@@ -50,10 +50,8 @@ class DataVisualisation:
         self.upload_button = Button(master = self.button_bar_frame,command = self.upload_dataset, height = 2, width = 10, text = "Upload").grid(row=0, column=1)
         self.clear_button = Button(master = self.button_bar_frame, command = self.clear, height = 2, width = 10, text = "clear").grid(row=0, column=2)
         self.clear_all_button = Button(master = self.button_bar_frame, command = self.clear_all, height = 2, width = 10, text = "clear all", background = "red").grid(row=0, column=3)
-        #self.add_sec_x_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_x_axis, height = 2, width = 10, text = "2. X Axis").grid(row=0, column=4)
-        #self.add_sec_y_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_y_axis, height = 2, width = 10, text = "2. Y Axis").grid(row=0, column=5)
-        self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
-        #self.add_sec_y_axis_button = Button(master = self.button_bar_frame, command = self.add_more_y_against_x1, height = 2, width = 10, text = "X(Y)").grid(row=0, column=5)
+        #self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
+        self.add_sec_y_axis_button = Button(master = self.button_bar_frame, command = self.add_more_y_against_x1, height = 2, width = 10, text = "X(Y_c)").grid(row=0, column=5)
         
         self.selected_x = StringVar()
         self.selected_y1 = StringVar()
@@ -85,8 +83,9 @@ class DataVisualisation:
     # eigentlich nur eine Abkürzung für add_sec_axis
     def add_more_y_against_x1(self):
         
-        self.internal_y_counter+=1
+        
         self.dropdown_y = OptionMenu(self.button_bar_frame, (lambda: self.selected_add_y), *self.imported_headers).grid(row=1, column=self.coloumn_counter)
+        self.internal_y_counter+=1
 
 
     def plot(self): 
@@ -95,16 +94,10 @@ class DataVisualisation:
             print("Bitte wählen Sie die Achsen")
             return
         
-        
-        #x_index = self.imported_headers.index(self.selected_x.get())
-        #y1_index = self.imported_headers.index(self.selected_y1.get())
-        #sorted_plot_data = sorted(self.plot_data, key = lambda x1: x[x_index])
-        #self.figure = Figure(figsize = (5, 5), dpi = 100)
-        #self.x1 = [point[x_index] for point in sorted_plot_data]
+  
         self.x1 = (self.csv_df[self.selected_x.get()])
         
         y1 = (self.csv_df[self.selected_y1.get()])
-        #y1 = [point[y1_index] for point in sorted_plot_data]
         
         self.fig, self.ax1 = plt.subplots()
         self.ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
@@ -168,20 +161,6 @@ class DataVisualisation:
         self.coloumn_counter+=1
 
 
-
-    def export_plot(self):
-        
-        if len(to_export_data) == 0:
-            print("Nichts zu exportieren")
-        else:
-            with open('export.csv', 'w', newline='') as csvfile:
-        
-                writer = csv.writer(csvfile)
-
-                writer.writerow(['x', 'y'])
-                
-                for row in to_export_data:
-                    writer.writerow(row)
         
     def clear(self):
         print("clear")
@@ -190,17 +169,7 @@ class DataVisualisation:
             for child in self.graph_frame.winfo_children():
                 if isinstance(child, Canvas):
                     child.destroy()
-                    print("deleted")
-        
-        # also clear selected_x and selected_y
-        #self.selected_x.set("")
-        #self.selected_y1.set("")
-        #if hasattr(self, 'dropdown_y2'):
-        #    self.selected_y2.set("")
-        #    self.dropdown_y2.destroy()
-        #if hasattr(self, 'dropdown_x2'):
-        #    self.selected_x2.set("")
-        #    self.dropdown_x2.destroy()
+       
             
     def clear_all(self):
 
