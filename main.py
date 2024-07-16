@@ -50,7 +50,7 @@ class DataVisualisation:
         self.upload_button = Button(master = self.button_bar_frame,command = self.upload_dataset, height = 2, width = 10, text = "Upload").grid(row=0, column=1)
         self.clear_button = Button(master = self.button_bar_frame, command = self.clear, height = 2, width = 10, text = "clear").grid(row=0, column=2)
         self.clear_all_button = Button(master = self.button_bar_frame, command = self.clear_all, height = 2, width = 10, text = "clear all", background = "red").grid(row=0, column=3)
-        #self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
+        self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
         self.add_sec_y_axis_button = Button(master = self.button_bar_frame, command = self.add_more_y_against_x1, height = 2, width = 10, text = "X(Y_c)").grid(row=0, column=5)
         
         self.selected_x = StringVar()
@@ -58,14 +58,6 @@ class DataVisualisation:
         self.selected_y2 = StringVar()
         self.selected_x2 = StringVar()
         
-    
-    
-    def generate_data_and_plot(self):
-        
-        clear()
-        for _ in range(50):
-            to_export_data.append((random.randint(0,100) ,random.randint(0, 100)))
-        plot(to_export_data)
     
     def add_sec_axis(self):
         self.dropdown_x2 = OptionMenu(self.button_bar_frame, self.selected_x2, *self.imported_headers).grid(row=1, column=self.coloumn_counter)
@@ -83,9 +75,8 @@ class DataVisualisation:
     # eigentlich nur eine Abkürzung für add_sec_axis
     def add_more_y_against_x1(self):
         
-        
         self.dropdown_y = OptionMenu(self.button_bar_frame, (lambda: self.selected_add_y), *self.imported_headers).grid(row=1, column=self.coloumn_counter)
-        self.internal_y_counter+=1
+        self.coloumn_counter+=1
 
 
     def plot(self): 
@@ -94,7 +85,7 @@ class DataVisualisation:
             print("Bitte wählen Sie die Achsen")
             return
         
-  
+        
         self.x1 = (self.csv_df[self.selected_x.get()])
         
         y1 = (self.csv_df[self.selected_y1.get()])
@@ -113,14 +104,12 @@ class DataVisualisation:
             x2 = (self.csv_df[self.selected_x2.get()])
             plt.xticks(self.x1, x2, rotation=45, ha='right')
         
-        
         plt.legend()
         self.fig.set_size_inches(115,80)
-        self.canvas = FigureCanvasTkAgg(self.fig, master = self.graph_frame)   
-        self.canvas.draw() 
+        self.canvas = FigureCanvasTkAgg(self.fig, master = self.graph_frame)
+        self.canvas.draw()
         tk_widget = self.canvas.get_tk_widget()
         self.canvas.get_tk_widget().grid(row=0, column=0)
-        print("plot")
         
 
     def upload_dataset(self):
@@ -159,8 +148,6 @@ class DataVisualisation:
         self.y1_label = Label(master = self.button_bar_frame, text = "X(Y1)-Achse").grid(row=1, column=self.coloumn_counter)
         
         self.coloumn_counter+=1
-
-
         
     def clear(self):
         print("clear")
