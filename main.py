@@ -31,7 +31,6 @@ class DataVisualisation:
         self.selected_x2 = StringVar()
         self.selected_y1 = StringVar()
         self.selected_ys = []
-        self.selected_xs = []
         # label text comapre button
         self.compare_button_text = StringVar(value="Compare")
         # flag to indicate which text to display
@@ -137,15 +136,13 @@ class DataVisualisation:
         self.ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
         
         if self.compare_flag == 1:
-            for current_x in self.selected_xs:
-                for current_y in self.selected_ys:
-                    filtered_data = self.csv_df[self.csv_df['name'] == self.selected_x1.get()]
-                    x = (filtered_data[self.current_x.get()])
-                    print(x.to_list())
-                    print(self.selected_x1.get())
-                    
-                    y = pd.to_numeric(filtered_data[self.current_y.get()])
-                    self.ax1.plot(x, y,"-r", label="ax1")
+            filtered_data = self.csv_df[self.csv_df['name'] == self.selected_x1.get()]
+            x = (filtered_data[self.selected_x2.get()])
+            print(x.to_list())
+            print(self.selected_x1.get())
+            
+            y = pd.to_numeric(filtered_data[self.selected_y1.get()])
+            self.ax1.plot(x, y,"-r", label="ax1")
         
         else:
             x1 = (self.csv_df[self.selected_x1.get()])
@@ -190,10 +187,8 @@ class DataVisualisation:
                     self.grouped_run_trace_ids.append(i)
         
         #self.compare_runs()
-        # selected_x1 entweder auswahl von globalen headers oder von grouped_run_trace_ids
         self.dropdown_x1 = OptionMenu(self.button_bar_frame, self.selected_x1, *self.used_headers_x)
         self.dropdown_x1.grid(row=1, column=self.coloumn_counter)
-        self.selected_xs.append(self.selected_x1)
         self.coloumn_counter+=1
         #internal_x1_coloumn_counter = self.coloumn_counter +1
         
@@ -203,7 +198,9 @@ class DataVisualisation:
         
         self.dropdown_y1 = OptionMenu(self.button_bar_frame, self.selected_y1, *self.used_headers_x)
         self.dropdown_y1.grid(row=1, column=self.coloumn_counter)
+        
         self.selected_ys.append(self.selected_y1)
+        
         self.coloumn_counter+=1
         
         self.y1_label = Label(master = self.button_bar_frame, text = "Y-Achse")
