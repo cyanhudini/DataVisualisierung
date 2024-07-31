@@ -27,14 +27,16 @@ class DataVisualisation:
         self.window.geometry("2500x1300") 
         self.coloumn_counter=0        
             
-        self.selected_x1 = StringVar()
-        self.selected_x2 = StringVar()
-        self.selected_y1 = StringVar()
-        self.selected_ys = []
         # label text comapre button
         self.compare_button_text = StringVar(value="Compare")
         # flag to indicate which text to display
         self.compare_flag = 1
+        
+        self.var_list_menu_button_x = {}
+        self.var_list_menu_button_y = {}
+        self.selected_options_menu_x = []
+        self.selected_options_menu_y = []
+        
         
         self.tooltip = mplcursors.cursor(hover=True)
         # top und bottom frame
@@ -64,42 +66,80 @@ class DataVisualisation:
         self.clear_all_button = Button(master = self.button_bar_frame, command = self.clear_all, height = 2, width = 10, text = "clear all", background = "red")
         self.clear_all_button.grid(row=0, column=3)
         #self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
-        self.add_more_axis_button = Button(master = self.button_bar_frame, command = self.add_more_axis, height = 2, width = 10, text = "Add Axis").grid(row=0, column=5)
+        #self.add_more_axis_button = Button(master = self.button_bar_frame, command = self.add_more_axis, height = 2, width = 10, text = "Add Axis").grid(row=0, column=5)
+        
+    
         self.to_compare_runs_button = Button(master = self.button_bar_frame, command = self.switch_compare_scope, height = 2, width = 10, text = self.compare_button_text.get())
-        self.to_compare_runs_button.grid(row=0, column=6)
+        self.to_compare_runs_button.grid(row=0, column=7)
         
-        
-        
-        
-    # TODO: switch_between_global_compare_and_single_runs, re-import headers von csv_df/csv file
     
+    def add_menu_buttons(self):
+        
+        ### X
+        self.menu_button_x = Menubutton(self.button_bar_frame, text="X  ", relief=RAISED)
+        
+        self.menu_x = Menu(self.menu_button_x, tearoff=0)
+        
+        self.menu_button_x.config(menu=self.menu_x)
+        
+        for option in self.used_headers_x:
+            variable = BooleanVar()
+            self.var_list_menu_button_x[option] = variable
+            
+            self.menu_x.add_checkbutton(label=option, variable=variable, command = lambda  value=option: self.update_selection("menu_x", value))
+        self.menu_button_x.grid(row=0, column=8)
+        
+        
+        ### Y
+        self.menu_button_y = Menubutton(self.button_bar_frame, text="Y", relief=RAISED)
+        
+        self.menu_y = Menu(self.menu_button_y, tearoff=0)
+        
+        self.menu_button_y.config(menu=self.menu_y)
+        
+        for option in self.global_compare_headers:
+            variable = BooleanVar()
+            self.var_list_menu_button_y[option] = variable
+            
+            self.menu_y.add_checkbutton(label=option, variable=variable, command = lambda value=option : self.update_selection("menu_y", value))
+        self.menu_button_y.grid(row=0, column=9)
+        
+        
+    def update_selection(self, which_menu, value):
     
+        # hier versuche ich mutual exclusivity herzustellen
+        # 1 . wenn ich in x mehr als eine Option auswähle, kann ich nur eine Option in y wählen
+     
+        if which_menu == "menu_x":
+            if len(self.selected_options_menu_x) >= len(self.selected_options_menu_y) and len(self.selected_options_menu_x) >= 1:
+                self.selected_options_menu_x = [option for option, var in self.var_list_menu_button_x.items() if var.get()]
+            else:
+                self.selected_options_menu_x.clear()
+                self.selected_options_menu_x.append(value)
+        else:
+            if len(self.selected_options_menu_y) >= len(self.selected_options_menu_x) and len(self.selected_options_menu_y) >= 1:
+                self.selected_options_menu_y = [option for option, var in self.var_list_menu_button_y.items() if var.get()]
+            else:
+                print("clear y")
+                self.selected_options_menu_y.clear()
+                self.selected_options_menu_y.append(value)
+        print(self.selected_options_menu_x)
+        print(self.selected_options_menu_y)
+     
+     
     def switch_compare_scope(self):
-        
-        print("compare")
-        self.clear()
         if self.compare_flag == 0:
-            self.used_headers_x = []
-            self.used_headers_x = self.global_compare_headers
-            self.change_optionsmenu_options()
-            self.compare_button_text.set("Compare")
-            self.to_compare_runs_button.config(text=self.compare_button_text.get())
             self.compare_flag = 1
-
+            self.compare_button_text.set("Compare")
         else:
             self.used_headers_x = []
             self.used_headers_x = self.grouped_run_trace_ids
             self.change_optionsmenu_options()
-            self.compare_button_text.set("Global")
-            self.to_compare_runs_button.config(text=self.compare_button_text.get())
-            self.x1_label.config(text="Run ID")
-            self.dropdown_x2_for_run_compare = OptionMenu(self.button_bar_frame, self.selected_x2, *self.global_compare_headers)
-            self.dropdown_x2_for_run_compare.grid(row=1, column=self.coloumn_counter)
-            self.coloumn_counter+=1
-            self.dropdown_x2_label = Label(master = self.button_bar_frame, text = "X-Achse")
-            self.dropdown_x2_label.grid(row=1, column=self.coloumn_counter+1)
-            self.coloumn_counter+=1
-            self.compare_flag = 0
+            self.insert_options()
+            
+    def insert_options(self):
+        for options in self.used_headers_x:
+            self.multiple_selection_button_x.insert(END, options)
             
             
     def change_optionsmenu_options(self):
@@ -124,9 +164,10 @@ class DataVisualisation:
         self.selected_ys.append(selected_y)
         self.coloumn_counter+=1
     
+    
     def plot(self): 
         self.clear()
-        if not self.selected_x1 or not self.selected_y1:
+        if not self.selected_options_menu_x or not self.selected_options_menu_y:
             print("Bitte wählen Sie die Achsen")
             return
         
@@ -135,7 +176,10 @@ class DataVisualisation:
         self.fig, self.ax1 = plt.subplots()
         self.ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
         
-        if self.compare_flag == 1:
+        
+        
+        ### wenn flag 1, dann local compare, wenn 0 dann global compare
+        '''if self.compare_flag == 1:
             filtered_data = self.csv_df[self.csv_df['name'] == self.selected_x1.get()]
             x = (filtered_data[self.selected_x2.get()])
             print(x.to_list())
@@ -149,7 +193,20 @@ class DataVisualisation:
             #y1 = (self.csv_df[self.selected_y1.get()])
             for y in self.selected_ys:
                 y = (self.csv_df[y.get()])
-                self.ax1.plot(x1, y,"-r", label="ax1")
+                self.ax1.plot(x1, y,"-r", label="ax1")'''
+             
+        for x in self.selected_options_menu_x:
+            filtered_data = self.csv_df[self.csv_df['name'] == x]
+            print(filtered_data)
+            x_data = filtered_data['name']
+            print(x_data)
+            for y in self.selected_options_menu_y:
+            
+                #y_data = filtered_data[y]
+                y_data = (filtered_data[y])
+                print(y_data)
+                self.ax1.plot(x_data, y_data, "-r", label=x)
+        
         plt.xticks(rotation=35, ha='right') 
        
         
@@ -174,20 +231,21 @@ class DataVisualisation:
             with(open(csv_file, "r")) as file:
                 
                 csv_reader = csv.reader(file)
-                self.global_compare_headers = next(csv_reader)
-                self.used_headers_x = self.global_compare_headers
+                self.global_compare_headers = next(csv_reader) 
+                 # beim upload sind die ersten options die globalen headers
                 for row in csv_reader:
                     int_row = [(item) for item in row]
                     self.plot_data.append(row)
         
-        to_group = self.csv_df["name"]
+        to_group = self.csv_df["name"] # name ist hier die run_id, in der spalte "name"
         for i in to_group:
                 if i not in self.grouped_run_trace_ids:
                     print(i)
                     self.grouped_run_trace_ids.append(i)
-        
+        self.used_headers_x = self.grouped_run_trace_ids
+        self.add_menu_buttons()
         #self.compare_runs()
-        self.dropdown_x1 = OptionMenu(self.button_bar_frame, self.selected_x1, *self.used_headers_x)
+        '''self.dropdown_x1 = OptionMenu(self.button_bar_frame, self.selected_x1, *self.used_headers_x)
         self.dropdown_x1.grid(row=1, column=self.coloumn_counter)
         self.coloumn_counter+=1
         #internal_x1_coloumn_counter = self.coloumn_counter +1
@@ -206,12 +264,12 @@ class DataVisualisation:
         self.y1_label = Label(master = self.button_bar_frame, text = "Y-Achse")
         self.y1_label.grid(row=1, column=self.coloumn_counter)
         
-        self.coloumn_counter+=1
+        self.coloumn_counter+=1'''
         
     def clear(self):
         print("clear")
         self.compare_flag = 1
-        self.selected_ys = []
+
         if self.canvas:
             for child in self.graph_frame.winfo_children():
                 if isinstance(child, Canvas):
