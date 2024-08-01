@@ -209,32 +209,26 @@ class DataVisualisation:
         if not self.selected_options_menu_x or not self.selected_options_menu_y or not self.selected_options_menu_ids:
             print("Bitte wählen Sie die Achsen")
             return
+ 
         self.fig, self.ax1 = plt.subplots()
         self.ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
-        for run_id in self.selected_options_menu_ids:
-            filtered_data = self.csv_df[self.csv_df['name'] == run_id]
-            self.group_generic_data(filtered_data)
-            for x in self.selected_options_menu_x:
-                x_data = (filtered_data[x])
-                x_sorted = x_data.sort_values()
-                print(x_data)
-                for y in self.selected_options_menu_y:
-                    y_data = (filtered_data[y])
-                    y_sorted = y_data.sort_values()
-                    
-                    print(y_data)
-                    self.ax1.plot(range(len(x_data)), y_data, "-r", label=run_id)
-
-        mplcursors.cursor(hover=True)
-        
-        '''
-        for x 
-        '''
-        
-        
+            
+        for x in self.selected_options_menu_x:
+            filtered_data = self.csv_df[self.csv_df['name'] == x]
+            print(filtered_data)
+            x_data = filtered_data['id']
+            print(x_data.to_list())
+            x_data_sorted = (x_data)
+            for y in self.selected_options_menu_y:
+                print(y)
+                #y_data = filtered_data[y]
+                y_data = pd.to_numeric(filtered_data[y])
+                label_name = x if len(self.selected_options_menu_x) >= len(self.selected_options_menu_y) else y
+                self.ax1.plot(range(len(x_data)), y_data, label=label_name)
+        mplcursors.cursor()
         plt.xticks(rotation=35, ha='right') 
-
-        #plt.autoscale()
+       
+        plt.autoscale()
         plt.legend()
         self.fig.set_size_inches(20,9.5)
         self.canvas = FigureCanvasTkAgg(self.fig, master =self.graph_frame)
