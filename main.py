@@ -39,6 +39,7 @@ class DataVisualisation:
         self.selected_options_menu_y = []
         self.selected_options_menu_ids = []
         
+        self.identical_coloumns_to_display = []
         
         self.tooltip = mplcursors.cursor(hover=True)
         # top und bottom frame
@@ -182,32 +183,53 @@ class DataVisualisation:
         self.selected_ys.append(selected_y)
         self.coloumn_counter+=1
     
+    def group_coloumn_data_by_identical_values(self, df):
+        for coloumn in filtered_data:
+            # iterate over all coloumns
+            # then check whether the values in the rwos are each identical or not
+            # if yes, put the name of the coloumn in the list of grouped_data
+            
+            if len(filtered_data[coloumn].value_counts()) <= 1:
+                self.identical_coloumns_to_display.append(coloumn)
+    
+    def group_generic_data(self, filtered_data):
+        print(filteregrouped_datad_data)
+        for coloumn in filtered_data:
+            # iterate over all coloumns
+            # then check whether the values in the rwos are each identical or not
+            # if yes, put the name of the coloumn in the list of grouped_data
+            
+            if len(filtered_data[coloumn].value_counts()) <= 1:
+                self.identical_coloumns_to_display.append(coloumn)
+        print(self.identical_coloumns_to_display)
+        
     
     def plot(self): 
         self.clear()
         if not self.selected_options_menu_x or not self.selected_options_menu_y or not self.selected_options_menu_ids:
             print("Bitte wählen Sie die Achsen")
             return
-        x_labels = []
         self.fig, self.ax1 = plt.subplots()
         self.ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
         for run_id in self.selected_options_menu_ids:
             filtered_data = self.csv_df[self.csv_df['name'] == run_id]
+            self.group_generic_data(filtered_data)
             for x in self.selected_options_menu_x:
                 x_data = (filtered_data[x])
-                
                 x_sorted = x_data.sort_values()
-                x_labels = x_sorted
+                print(x_data)
                 for y in self.selected_options_menu_y:
-                
-                    #y_data = filtered_data[y]
                     y_data = (filtered_data[y])
                     y_sorted = y_data.sort_values()
-                    #label_name = x if len(self.selected_options_menu_x) > len(self.selected_options_menu_y) else y
+                    
+                    print(y_data)
                     self.ax1.plot(range(len(x_data)), y_data, "-r", label=run_id)
-        
-        #self.ax1.set_xticklabels(x_labels)
+
         mplcursors.cursor(hover=True)
+        
+        '''
+        for x 
+        '''
         
         
         plt.xticks(rotation=35, ha='right') 
@@ -241,6 +263,7 @@ class DataVisualisation:
                     self.plot_data.append(row)
         
         to_group = self.csv_df["name"] # name ist hier die run_id, in der spalte "name"
+        # self.group_coloumn_data_by_identical_values(self.csv_df, "name")
         for i in to_group:
                 if i not in self.grouped_run_trace_ids:
                     print(i)
