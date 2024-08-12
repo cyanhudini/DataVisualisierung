@@ -1,4 +1,5 @@
-from tkinter import * 
+from tkinter import *
+from tkinter import ttk
 from matplotlib.figure import Figure 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,  
@@ -25,8 +26,8 @@ class DataVisualisation:
         self.window_width = 2500
         self.window_height = 1300
         self.window.geometry("2500x1300") 
-        self.coloumn_counter=0        
-            
+        self.coloumn_counter=1     
+        self.row_counter_data_table = 0
         # label text comapre button
         self.compare_button_text = StringVar(value="Compare")
         # flag to indicate which text to display
@@ -43,22 +44,27 @@ class DataVisualisation:
         
         self.tooltip = mplcursors.cursor(hover=True)
         # top und bottom frame
-        self.top_frame = Frame(self.window, width=self.window_width, height=100)
+        self.top_frame = Frame(self.window, width=self.window_width)
         self.top_frame.grid(row=0, column=0, sticky="nsew")
-        self.bottom_frame = Frame(self.window, width=self.window_width, height=1200 )
-        self.bottom_frame.grid(row=1, column=0, sticky="nsew")
+        self.middle_frame = Frame(self.window,bg="grey", width=self.window_width)
+        self.middle_frame.grid(row=2, column=0)
+        self.bottom_frame = Frame(self.window, width=self.window_width)
+        self.bottom_frame.grid(row=3, column=0, sticky="nsew")
         
         self.top_frame.grid_rowconfigure(0, weight=1)
         self.top_frame.grid_columnconfigure(0, weight=1)
+        self.middle_frame.grid_rowconfigure(0, weight=1)
+        self.middle_frame.grid_columnconfigure(0, weight=1)
         self.bottom_frame.grid_rowconfigure(0, weight=1)
         self.bottom_frame.grid_columnconfigure(0, weight=1)
         
         # frames für buttons und graph in top und bottom frame
         self.button_bar_frame = Frame(self.top_frame, name="button_bar_frame")
-        self.button_bar_frame.grid(row=0, column=0, )
-        self.graph_frame = Frame(self.bottom_frame, bg="grey", name="graph_frame")
-        self.graph_frame.grid(row=0, column=0, sticky="nsew")
-        
+        self.button_bar_frame.grid(row=0, column=0)
+        self.graph_frame = Frame(self.middle_frame, bg="grey", name="graph_frame")
+        self.graph_frame.grid(row=0, column=1, )
+        self.data_table_frame = Frame(self.bottom_frame, name="data_table_frame")
+        self.data_table_frame.grid(row=0, column=0)
         # buttons
         self.plot_button = Button(master = self.button_bar_frame,command = self.plot,height = 2,width = 10,text = "Plot")
         self.plot_button.grid(row=0, column=0)
@@ -71,40 +77,23 @@ class DataVisualisation:
         #self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
         #self.add_more_axis_button = Button(master = self.button_bar_frame, command = self.add_more_axis, height = 2, width = 10, text = "Add Axis").grid(row=0, column=5)
         
-    
-        self.to_compare_runs_button = Button(master = self.button_bar_frame, command = self.switch_compare_scope, height = 2, width = 10, text = self.compare_button_text.get())
-        self.to_compare_runs_button.grid(row=0, column=7)
         
     
     def add_menu_buttons(self):
         
         ### Run Ids
-        self.menu_button_ids = Menubutton(self.button_bar_frame, text="Run IDs  ", relief=RAISED)
+        self.menu_button_ids = Menubutton(self.button_bar_frame, text="X ", relief=RAISED)
         
         self.menu_ids = Menu(self.menu_button_ids, tearoff=0)
         
         self.menu_button_ids.config(menu=self.menu_ids)
         
-        for option in self.used_headers_x:
-            variable = BooleanVar()
-            self.var_list_menu_button_id[option] = variable
-            
-            self.menu_ids.add_checkbutton(label=option, variable=variable ,command = lambda  value=option: self.update_selection("menu_ids", value))
-        self.menu_button_ids.grid(row=0, column=8)
-        
-        #### X
-        self.menu_button_x = Menubutton(self.button_bar_frame, text="X  ", relief=RAISED)
-        
-        self.menu_x = Menu(self.menu_button_x, tearoff=0)
-        
-        self.menu_button_x.config(menu=self.menu_x)
-        
-        for option in self.global_compare_headers:
+        for option in self.grouped_run_trace_ids:
             variable = BooleanVar()
             self.var_list_menu_button_x[option] = variable
             
-            self.menu_x.add_checkbutton(label=option, variable=variable, command = lambda  value=option: self.update_selection("menu_x", value))
-        self.menu_button_x.grid(row=0, column=9)
+            self.menu_ids.add_checkbutton(label=option, variable=variable ,command = lambda  value=option: self.update_selection("menu_x", value))
+        self.menu_button_ids.grid(row=0, column=8)
         
         
         ### Y
@@ -117,18 +106,15 @@ class DataVisualisation:
         for option in self.global_compare_headers:
             variable = BooleanVar()
             self.var_list_menu_button_y[option] = variable
-            
             self.menu_y.add_checkbutton(label=option, variable=variable, command = lambda value=option : self.update_selection("menu_y", value))
-        self.menu_button_y.grid(row=0, column=10)
+        self.menu_button_y.grid(row=0, column=9)
         
         
     def update_selection(self, which_menu, value):
     
         # hier versuche ich mutual exclusivity herzustellen
         # 1 . wenn ich in x mehr als eine Option auswähle, kann ich nur eine Option in y wählen
-        if which_menu == "menu_ids":
-            self.selected_options_menu_ids = [option for option, var in self.var_list_menu_button_id.items() if var.get()]
-            
+         
         if which_menu == "menu_x":
             if len(self.selected_options_menu_x) >= len(self.selected_options_menu_y) and len(self.selected_options_menu_x) >= 1:
                 self.selected_options_menu_x = [option for option, var in self.var_list_menu_button_x.items() if var.get()]
@@ -139,74 +125,52 @@ class DataVisualisation:
             if len(self.selected_options_menu_y) >= len(self.selected_options_menu_x) and len(self.selected_options_menu_y) >= 1:
                 self.selected_options_menu_y = [option for option, var in self.var_list_menu_button_y.items() if var.get()]
             else:
-                print("clear y")
                 self.selected_options_menu_y.clear()
                 self.selected_options_menu_y.append(value)
-        print(self.selected_options_menu_x)
-        print(self.selected_options_menu_y)
-     
-     
-    def switch_compare_scope(self):
-        if self.compare_flag == 0:
-            self.compare_flag = 1
-            self.compare_button_text.set("Compare")
-        else:
-            self.used_headers_x = []
-            self.used_headers_x = self.grouped_run_trace_ids
-            self.change_optionsmenu_options()
-            self.insert_options()
-            
-    def insert_options(self):
-        for options in self.used_headers_x:
-            self.multiple_selection_button_x.insert(END, options)
-            
-            
-    def change_optionsmenu_options(self):
-        menu = self.dropdown_x1["menu"]
-        menu.delete(0, "end")
-        for child in self.button_bar_frame.winfo_children():
-            if isinstance(child, OptionMenu):
-                for options in self.used_headers_x:
-                    menu.add_command(label=options, command=lambda value=options: self.selected_x1.set(value))
     
-    def add_more_axis(self):
-        selected_y = StringVar()
-        selected_x1 = StringVar()
-        
-        dropdown_x = OptionMenu(self.button_bar_frame, selected_x1 , *self.used_headers_x)
-        dropdown_x.grid(row=1, column=self.coloumn_counter)
-        
-        self.coloumn_counter+=1
-        
-        dropdown_y = OptionMenu(self.button_bar_frame, selected_y , *self.global_compare_headers)
-        dropdown_y.grid(row=1, column=self.coloumn_counter)
-        self.selected_ys.append(selected_y)
-        self.coloumn_counter+=1
+    def group_coloumn_data_by_identical_values(self, df, header_name):
+        # gruppiere daten nach identischen werten in einer spalte
+        grouped_data = []
+        for i in df[header_name]:
+                #if i not in grouped_data and i not null
+                if i not in grouped_data and i == i:
+                    grouped_data.append(i)
+        return grouped_data
     
-    def group_coloumn_data_by_identical_values(self, df):
+    def group_coloumn_where_values_identical(self, filtered_data):
+        #print(filteregrouped_datad_data)
+        identical_coloumns_to_display = []
         for coloumn in filtered_data:
-            # iterate over all coloumns
-            # then check whether the values in the rwos are each identical or not
-            # if yes, put the name of the coloumn in the list of grouped_data
-            
-            if len(filtered_data[coloumn].value_counts()) <= 1:
-                self.identical_coloumns_to_display.append(coloumn)
+            # packe alle header namen dessen spalten werte sich untereinander nicht unterscheiden in eine liste
+            if len(filtered_data[coloumn].value_counts()) <= 1 and not filtered_data[coloumn].isnull().sum() > 0:
+                identical_coloumns_to_display.append(coloumn)
+        return identical_coloumns_to_display
     
-    def group_generic_data(self, filtered_data):
-        print(filteregrouped_datad_data)
-        for coloumn in filtered_data:
-            # iterate over all coloumns
-            # then check whether the values in the rwos are each identical or not
-            # if yes, put the name of the coloumn in the list of grouped_data
-            
-            if len(filtered_data[coloumn].value_counts()) <= 1:
-                self.identical_coloumns_to_display.append(coloumn)
-        print(self.identical_coloumns_to_display)
+    def display_identical_coloumns(self, filtered_data):
+        # zeige die identischen spalten an
+        print("display")
+        coloumn_data = []
+        coloumn_header = []
+        identical_coloumns_to_display = self.group_coloumn_where_values_identical(filtered_data)
         
+        for coloumn in identical_coloumns_to_display:
+            print(coloumn)
+            coloumn_data.append(self.group_coloumn_data_by_identical_values(filtered_data, coloumn))
+            coloumn_header.append(coloumn)
+        data_table = ttk.Treeview(self.data_table_frame, columns=identical_coloumns_to_display, show="headings", height=1)
+        # insert coloumn_header as header
+        for coloumn in coloumn_header:
+            data_table.heading(coloumn, text=coloumn)
+        data_table.insert("", "end", values=coloumn_data)
+        
+        data_table.grid(row=self.row_counter_data_table, column=0)
+        self.row_counter_data_table =+ 1
+        
+                
     
     def plot(self): 
         self.clear()
-        if not self.selected_options_menu_x or not self.selected_options_menu_y or not self.selected_options_menu_ids:
+        if not self.grouped_run_trace_ids or not self.global_compare_headers:
             print("Bitte wählen Sie die Achsen")
             return
  
@@ -215,23 +179,22 @@ class DataVisualisation:
             
         for x in self.selected_options_menu_x:
             filtered_data = self.csv_df[self.csv_df['name'] == x]
-            print(filtered_data)
+            #filtered_data = self.group_coloumn_data_by_identical_values(self.csv_df, x)
+            # da wir immer mit der run_id arbeiten, ist die run_id die x achse
             x_data = filtered_data['id']
-            print(x_data.to_list())
-            x_data_sorted = (x_data)
             for y in self.selected_options_menu_y:
                 print(y)
                 #y_data = filtered_data[y]
                 y_data = pd.to_numeric(filtered_data[y])
-                label_name = x if len(self.selected_options_menu_x) >= len(self.selected_options_menu_y) else y
-                self.ax1.plot(range(len(x_data)), y_data, label=label_name)
+                
+                self.display_identical_coloumns(filtered_data)
+                self.ax1.plot(range(len(x_data)), y_data, label=x)
         mplcursors.cursor()
-        plt.xticks(rotation=35, ha='right') 
-       
+        plt.xticks(rotation=35, ha='right')    
         plt.autoscale()
         plt.legend()
-        self.fig.set_size_inches(20,9.5)
-        self.canvas = FigureCanvasTkAgg(self.fig, master =self.graph_frame)
+        self.fig.set_size_inches(13,7)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas.draw()
         #self.canvas.get_tk_widget()
         self.canvas.get_tk_widget().grid(row=0, column=0)
@@ -256,13 +219,9 @@ class DataVisualisation:
                     int_row = [(item) for item in row]
                     self.plot_data.append(row)
         
-        to_group = self.csv_df["name"] # name ist hier die run_id, in der spalte "name"
-        # self.group_coloumn_data_by_identical_values(self.csv_df, "name")
-        for i in to_group:
-                if i not in self.grouped_run_trace_ids:
-                    print(i)
-                    self.grouped_run_trace_ids.append(i)
-        self.used_headers_x = self.grouped_run_trace_ids
+        #to_group = self.csv_df["name"] # name ist hier die run_id, in der spalte "name"
+        self.grouped_run_trace_ids = self.group_coloumn_data_by_identical_values(self.csv_df, "name")
+        
         self.add_menu_buttons()
         
     def clear(self):
@@ -272,6 +231,9 @@ class DataVisualisation:
         if self.canvas:
             for child in self.graph_frame.winfo_children():
                 if isinstance(child, Canvas):
+                    child.destroy()
+            for child in self.data_table_frame.winfo_children():
+                if isinstance(child, ttk.Treeview):
                     child.destroy()
        
             
