@@ -183,25 +183,18 @@ class DataVisualisation:
         self.selected_ys.append(selected_y)
         self.coloumn_counter+=1
     
-    def group_coloumn_data_by_identical_values(self, df):
+    def group_coloumn_data_by_identical_values(self, filtered_data):
         for coloumn in filtered_data:
-            # iterate over all coloumns
-            # then check whether the values in the rwos are each identical or not
-            # if yes, put the name of the coloumn in the list of grouped_data
-            
             if len(filtered_data[coloumn].value_counts()) <= 1:
                 self.identical_coloumns_to_display.append(coloumn)
     
-    def group_generic_data(self, filtered_data):
-        print(filteregrouped_datad_data)
-        for coloumn in filtered_data:
-            # iterate over all coloumns
-            # then check whether the values in the rwos are each identical or not
-            # if yes, put the name of the coloumn in the list of grouped_data
-            
-            if len(filtered_data[coloumn].value_counts()) <= 1:
-                self.identical_coloumns_to_display.append(coloumn)
-        print(self.identical_coloumns_to_display)
+    def group_coloumn_data(self, filtered_data, coloumn_name):
+        grouped = []
+        for data in filtered_data:
+                if data not in self.grouped:
+                    print(data)
+                    self.grouped.append(data)
+        return grouped
         
     
     def plot(self): 
@@ -213,7 +206,7 @@ class DataVisualisation:
         self.ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
         for run_id in self.selected_options_menu_ids:
             filtered_data = self.csv_df[self.csv_df['name'] == run_id]
-            self.group_generic_data(filtered_data)
+            #self.group_generic_data(filtered_data)
             for x in self.selected_options_menu_x:
                 x_data = (filtered_data[x])
                 x_sorted = x_data.sort_values()
