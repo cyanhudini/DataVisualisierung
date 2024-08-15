@@ -58,7 +58,7 @@ class DataVisualisation:
         self.top_frame.grid_columnconfigure(0, weight=1)
         self.middle_frame.grid_rowconfigure(0, weight=1)
         self.middle_frame.grid_columnconfigure(0, weight=1)
-        self.bottom_frame.grid_rowconfigure(0, weight=1)
+        self.bottom_frame.grid_rowconfigure(0, weight=0)
         self.bottom_frame.grid_columnconfigure(0, weight=1)
         
         # frames für buttons und graph in top und bottom frame
@@ -67,7 +67,7 @@ class DataVisualisation:
         self.graph_frame = Frame(self.middle_frame, name="graph_frame")
         self.graph_frame.grid(row=0, column=0)
         self.data_table_frame = Frame(self.bottom_frame, name="data_table_frame")
-        self.data_table_frame.grid(row=0, column=0)
+        self.data_table_frame.grid(row=0, column=0, sticky="nsew")
         # buttons
         self.plot_button = Button(master = self.button_bar_frame,command = self.plot,height = 2,width = 10,text = "Plot")
         self.plot_button.grid(row=0, column=0)
@@ -80,7 +80,20 @@ class DataVisualisation:
         #self.add_sec_axis_button = Button(master = self.button_bar_frame, command = self.add_sec_axis, height = 2, width = 10, text = "2. Achse").grid(row=0, column=5)
         #self.add_more_axis_button = Button(master = self.button_bar_frame, command = self.add_more_axis, height = 2, width = 10, text = "Add Axis").grid(row=0, column=5)
         
+    def add_menu_button(self,    ):
+        self.menu_button_ids = Menubutton(self.button_bar_frame, text="X ", relief=RAISED)
         
+        self.menu_ids = Menu(self.menu_button_ids, tearoff=0)
+        
+        self.menu_button_ids.config(menu=self.menu_ids)
+        
+        for option in self.grouped_run_trace_ids:
+            variable = BooleanVar()
+            self.var_list_menu_button_x[option] = variable
+            
+            self.menu_ids.add_checkbutton(label=option, variable=variable, command = lambda value=option, variable=variable : self.update_selection("menu_x", value, variable))
+        self.menu_button_ids.grid(row=0, column=8)
+    
     
     def add_menu_buttons(self):
         
@@ -140,8 +153,8 @@ class DataVisualisation:
             else:
                 print("clear x")
                 # get check button menu item and use the "deselct" method to clear the check button
-                for option in self.var_list_menu_button_x:
-                    self.var_list_menu_button_x[option].set(False)
+                for option, var in self.var_list_menu_button_x:
+                    self.var_list_menu_button_x[option].get().set(False)
                 variable.set(True)
                 self.selected_options_menu_x.clear()
                 self.selected_options_menu_x.append(value)
@@ -149,21 +162,24 @@ class DataVisualisation:
                     #self.var_list_menu_button_x[value] = False
                 
         elif which_menu == "menu_y_plot_grouped":
-            if len(self.selected_options_menu_y_plot_grouped) >= len(self.selected_options_menu_x) and  len(self.selected_options_menu_y_plot_grouped) - len(self.selected_options_menu_x) >= 0:
+            if len(self.selected_options_menu_y_plot_grouped) - len(self.selected_options_menu_x) <= 1 and not self.selected_options_menu_y_plot_grouped or len(self.selected_options_menu_y_plot_grouped) - len(self.selected_options_menu_x) == 0:
                 self.selected_options_menu_y_plot_grouped = [option for option, var in self.var_list_menu_button_y_plot_grouped.items() if var.get()]
             else:
-                for option in self.var_list_menu_button_x:
-                    self.var_list_menu_button_x[option].set(False)
-                variable.set(True)
+                print("clear y grouped")
+                for option, var in self.var_list_menu_button_y_plot_grouped.items():
+                    self.var_list_menu_button_y_plot_grouped[option].set(False)
+                variable.set(True)  
                 self.selected_options_menu_y_plot_grouped.clear()
                 self.selected_options_menu_y_plot_grouped.append(value)
 
         else:
-            if len(self.selected_options_menu_y) >= len(self.selected_options_menu_x) and len(self.selected_options_menu_y) - len(self.selected_options_menu_x) >= 0:
+            if len(self.selected_options_menu_y) - len(self.selected_options_menu_x) <= 1 and not self.selected_options_menu_y or len(self.selected_options_menu_y) - len(self.selected_options_menu_x) == 0:
                 self.selected_options_menu_y = [option for option, var in self.var_list_menu_button_y.items() if var.get()]
             else:
-                for option in self.var_list_menu_button_x:
-                    self.var_list_menu_button_x[option].set(False)
+                print("clear y")    
+                for option, var in self.var_list_menu_button_y.items():
+                    print(self.var_list_menu_button_y[option])
+                    self.var_list_menu_button_y[option].set(False)
                 variable.set(True)
                 self.selected_options_menu_y.clear()
                 self.selected_options_menu_y.append(value)
@@ -206,7 +222,7 @@ class DataVisualisation:
         identical_coloumns_to_display = self.group_coloumn_where_values_identical(filtered_data)
         
         for coloumn in identical_coloumns_to_display:
-            print(coloumn)
+            
             coloumn_data.append(self.group_coloumn_data_by_identical_values(filtered_data, coloumn))
             coloumn_header.append(coloumn)
         data_table = ttk.Treeview(self.data_table_frame, columns=identical_coloumns_to_display, show="headings", height=1)
@@ -240,23 +256,25 @@ class DataVisualisation:
         for x in self.selected_options_menu_x:
             filtered_data = self.csv_df[self.csv_df['name'] == x]
             self.display_identical_coloumns(filtered_data)
+            print(x)
             #filtered_data = self.group_coloumn_data_by_identical_values(self.csv_df, x)
             # da wir immer mit der run_id arbeiten, ist die run_id die x achse
             x_data = filtered_data['id']
-            if self.selected_options_menu_y:
-                for y in self.selected_options_menu_y:
-                    # plot individual
-                    print(y)
-                    y_data = pd.to_numeric(filtered_data[y])
+            for y in self.selected_options_menu_y:
+                # plot individual
+                print(y)
+                y_data = pd.to_numeric(filtered_data[y])
+            
+                ax_y = self.ax1.twinx()
+                ax_y.spines['right'].set_position(('outward',50*axis_counter))
+                ax_y.spines['left'].set_visible(False)
+                ax_y.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+                #ax_y.yaxis.set_major_locator(ticker.MultipleLocator(base=len(self.selected_options_menu_x*10)))
+                ax_y.set_ylabel(y)
+                axis_counter += 1
+                ax_y.plot(range(len(x_data)), y_data, label=x)
+                ax_y.legend()
                 
-                    ax_y = self.ax1.twinx()
-                    ax_y.spines['right'].set_position(('outward',50*axis_counter))
-                    ax_y.spines['left'].set_visible(False)
-                    ax_y.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
-                    #ax_y.yaxis.set_major_locator(ticker.MultipleLocator(base=len(self.selected_options_menu_x*10)))
-                    ax_y.set_ylabel(y)
-                    axis_counter += 1
-                    ax_y.plot(range(len(x_data)), y_data, label=y) 
                 
             for y in self.selected_options_menu_y_plot_grouped:
                 # plot grouped
