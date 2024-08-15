@@ -134,30 +134,48 @@ class DataVisualisation:
         # 1 . wenn ich in x mehr als eine Option auswähle, kann ich nur eine Option in y wählen
          
         if which_menu == "menu_x":
-            
-            selected_x = self.change_selected_options(self.selected_options_menu_x, self.selected_options_menu_y, variable, self.var_list_menu_button_x, value)
-            selected_x = self.change_selected_options(self.selected_options_menu_x, self.selected_options_menu_y_plot_grouped, variable, self.var_list_menu_button_x, value)
-            if (selected_x):
-                self.selected_options_menu_x.append(selected_x)
+            if len(self.selected_options_menu_x) >= len(self.selected_options_menu_y) and len(self.selected_options_menu_x) - len(self.selected_options_menu_y) >= 0:
+                if len(self.selected_options_menu_x) >= len(self.selected_options_menu_y_plot_grouped) and len(self.selected_options_menu_x) - len(self.selected_options_menu_y_plot_grouped) >= 0:
+                    self.selected_options_menu_x = [option for option, var in self.var_list_menu_button_x.items() if var.get()]
+            else:
+                print("clear x")
+                # get check button menu item and use the "deselct" method to clear the check button
+                for option in self.var_list_menu_button_x:
+                    self.var_list_menu_button_x[option].set(False)
+                variable.set(True)
+                self.selected_options_menu_x.clear()
+                self.selected_options_menu_x.append(value)
+                
                     #self.var_list_menu_button_x[value] = False
                 
         elif which_menu == "menu_y_plot_grouped":
-            self.change_selected_options(self.selected_options_menu_y_plot_grouped, self.selected_options_menu_x, variable, self.var_list_menu_button_y_plot_grouped, value)
+            if len(self.selected_options_menu_y_plot_grouped) >= len(self.selected_options_menu_x) and  len(self.selected_options_menu_y_plot_grouped) - len(self.selected_options_menu_x) >= 0:
+                self.selected_options_menu_y_plot_grouped = [option for option, var in self.var_list_menu_button_y_plot_grouped.items() if var.get()]
+            else:
+                for option in self.var_list_menu_button_x:
+                    self.var_list_menu_button_x[option].set(False)
+                variable.set(True)
+                self.selected_options_menu_y_plot_grouped.clear()
+                self.selected_options_menu_y_plot_grouped.append(value)
 
         else:
-            self.change_selected_options(self.selected_options_menu_y, self.selected_options_menu_x, variable, self.var_list_menu_button_y, value)
+            if len(self.selected_options_menu_y) >= len(self.selected_options_menu_x) and len(self.selected_options_menu_y) - len(self.selected_options_menu_x) >= 0:
+                self.selected_options_menu_y = [option for option, var in self.var_list_menu_button_y.items() if var.get()]
+            else:
+                for option in self.var_list_menu_button_x:
+                    self.var_list_menu_button_x[option].set(False)
+                variable.set(True)
+                self.selected_options_menu_y.clear()
+                self.selected_options_menu_y.append(value)
         print(self.selected_options_menu_x)
-    
- 
-    
-    def change_selected_options(self, selected_list_1, selected_list_2, bool_variable, var_list, value):
+        
+    def change_selected_options(self, selected_list_1_len, selected_list_2_len, bool_variable, var_list):
         if len(selected_list_1) >= len(selected_list_2) and len(selected_list_1) - len(selected_list_2) >= 0:
                 selected_list_1 = [option for option, var in var_list.items() if var.get()]
-                print(selected_list_1)
         else:
             for option in var_list:
                 var_list[option].set(False)
-            bool_variable.set(True)
+            variable.set(True)
             selected_list_1.clear()
             selected_list_1.append(value)
     
