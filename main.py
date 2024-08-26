@@ -18,7 +18,7 @@ class DataVisualisation:
         self.canvas = None
         self.window = Tk() 
         self.window.title('Data Visualisierung')
-        self.window.grid_rowconfigure(1, weight=1)
+        self.window.grid_rowconfigure(1, weight=0)
         self.window.grid_columnconfigure(0, weight=1)
         self.global_compare_headers = []
         self.grouped_run_trace_ids = [] # gruppierte daten von von traces in jeweils einem run zum vergleichen
@@ -29,10 +29,6 @@ class DataVisualisation:
         self.window.geometry("2500x1300") 
         self.coloumn_counter=8   
         self.row_counter_data_table = 0
-        # label text comapre button
-        self.compare_button_text = StringVar(value="Compare")
-        # flag to indicate which text to display
-        self.compare_flag = 4
         
         self.var_list_menu_button_x = {}
         self.var_list_menu_button_y = {}
@@ -51,23 +47,22 @@ class DataVisualisation:
         self.top_frame.grid(row=0, column=0, )
         self.middle_frame = Frame(self.window,bg="grey", width=self.window_width)
         self.middle_frame.grid(row=1, column=0, )
-        self.bottom_frame = Frame(self.window, width=self.window_width)
+        self.bottom_frame = Frame(self.window, width=self.window_width, bg ="yellow")
         self.bottom_frame.grid(row=2, column=0)
         
-        self.top_frame.grid_rowconfigure(0, weight=0)
+        self.top_frame.grid_rowconfigure(0, weight=1)
         self.top_frame.grid_columnconfigure(0, weight=1)
         self.middle_frame.grid_rowconfigure(0, weight=1)
         self.middle_frame.grid_columnconfigure(0, weight=1)
         self.bottom_frame.grid_rowconfigure(0, weight=1)
         self.bottom_frame.grid_columnconfigure(0, weight=1)
         
-        # frames für buttons und graph in top und bottom frame
         self.button_bar_frame = Frame(self.top_frame, name="button_bar_frame")
         self.button_bar_frame.grid(row=0, column=0)
         self.graph_frame = Frame(self.middle_frame, name="graph_frame")
         self.graph_frame.grid(row=0, column=0)
-        self.data_table_frame = Frame(self.bottom_frame, name="data_table_frame")
-        self.data_table_frame.grid(row=2, column=0)
+        #self.data_table_frame = Frame(self.bottom_frame, name="data_table_frame")
+        #self.data_table_frame.grid(row=0, column=0)
         # buttons
         self.plot_button = Button(master = self.button_bar_frame,command = self.plot,height = 2,width = 10,text = "Plot")
         self.plot_button.grid(row=0, column=0)
@@ -112,7 +107,7 @@ class DataVisualisation:
         
     def change_selected_options(self, selected_list_to_add, reference_list, var_list, variable, value):
         if len(selected_list_to_add) <2 and len(reference_list) < 2 or len(selected_list_to_add) > len(reference_list):
-            selected_list_to_add = [option for option, _ in var_list.items() if var.get()]
+            selected_list_to_add = [option for option, var in var_list.items() if var.get()]
         else:
             for option,_ in var_list.items():
                 var_list[option].set(False)
@@ -153,17 +148,23 @@ class DataVisualisation:
             
             coloumn_data.append(self.group_coloumn_data_by_identical_values(filtered_data, coloumn))
             coloumn_header.append(coloumn)
-        data_table = ttk.Treeview(self.data_table_frame, columns=identical_coloumns_to_display, show="headings", height=1, class_= "data")
+        
+        data_table_frame = Frame(self.bottom_frame)
+        
+        data_table_frame.grid(row=self.row_counter_data_table, column=1 )
+         #self.bottom_frame.grid_rowconfigure(0, weight=1)
+        #self.bottom_frame.grid_columnconfigure(0, weight=1)
+        data_table_frame.grid_rowconfigure(0, weight=1)
+        data_table_frame.grid_columnconfigure(0, weight=1)
+        data_table = ttk.Treeview(data_table_frame, columns=identical_coloumns_to_display, show="headings", class_= "data")
         # insert coloumn_header as header
         for coloumn in coloumn_header:
             data_table.heading(coloumn, text=coloumn)
         data_table.insert("", "end", values=coloumn_data)
         
-        data_table.grid(row=self.row_counter_data_table, column=1)
-        self.row_counter_data_table =+ 1
+        self.row_counter_data_table =+1
     
     def check_for_numeric_data(self, coloumn_headers):
-
         for coloumn in coloumn_headers:
             if pd.to_numeric(self.csv_df[coloumn], errors="coerce").notnull().all():
                 self.global_compare_headers.append(coloumn)
@@ -243,9 +244,9 @@ class DataVisualisation:
                 y_label_legend = y if len(self.selected_options_menu_y_plot_grouped) > 1 else x
                 ax1.plot(range(len(x_data)), y_data, label=y_label_legend)
                 self.add_handles_labels(ax1)
-                    
+        
         # wenn kein grouped_x ausgewählt wurde, zeige die linke Achse nicht an
-        self.data_table_frame.grid(ipady=10)       
+        #self.data_table_frame.grid(ipady=10)       
         if not self.selected_options_menu_y_plot_grouped:
             ax1 = ax1.set_yticks([])
         mplcursors.cursor()
