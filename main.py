@@ -103,31 +103,24 @@ class DataVisualisation:
     def update_selection(self, which_menu, value, variable):
     
         if which_menu == "menu_x":
-            selected_list_to_add, var_list = self.change_selected_options(self.selected_options_menu_x, self.selected_options_menu_y, self.var_list_menu_button_x, variable, value)
-            self.selected_options_menu_x = selected_list_to_add
-            self.var_list_menu_button_x = var_list
-            selected_list_to_add, var_list = self.change_selected_options(self.selected_options_menu_x, self.selected_options_menu_y_plot_grouped, self.var_list_menu_button_x, variable, value)
-            self.selected_options_menu_x = selected_list_to_add
-            self.var_list_menu_button_x = var_list
+            self.selected_options_menu_x, self.var_list_menu_button_x = self.change_selected_options(self.selected_options_menu_x, self.selected_options_menu_y, self.var_list_menu_button_x, variable, value)
+            self.selected_options_menu_x, self.var_list_menu_button_x = self.change_selected_options(self.selected_options_menu_x, self.selected_options_menu_y_plot_grouped, self.var_list_menu_button_x, variable, value)
         elif which_menu == "menu_y":
-            selected_list_to_add, var_list = self.change_selected_options(self.selected_options_menu_y, self.selected_options_menu_x, self.var_list_menu_button_y, variable, value)
-            self.selected_options_menu_y = selected_list_to_add
-            self.var_list_menu_button_y = var_list
+            self.selected_options_menu_y , self.var_list_menu_button_y = self.change_selected_options(self.selected_options_menu_y, self.selected_options_menu_x, self.var_list_menu_button_y, variable, value)
         else:
-            selected_list_to_add, var_list = self.change_selected_options(self.selected_options_menu_y_plot_grouped, self.selected_options_menu_x, self.var_list_menu_button_y_plot_grouped, variable, value)
-            self.selected_options_menu_y_plot_grouped = selected_list_to_add
-            self.var_list_menu_button_y_plot_grouped = var_list
+            self.selected_options_menu_y_plot_grouped, self.var_list_menu_button_y_plot_grouped = self.change_selected_options(self.selected_options_menu_y_plot_grouped, self.selected_options_menu_x, self.var_list_menu_button_y_plot_grouped, variable, value)
         
     def change_selected_options(self, selected_list_to_add, reference_list, var_list, variable, value):
-        if len(selected_list_to_add) <=1 and len(reference_list) <= 1 or len(selected_list_to_add) > len(reference_list):
-            selected_list_to_add = [option for option, var in var_list.items() if var.get()]
+        if len(selected_list_to_add) <2 and len(reference_list) < 2 or len(selected_list_to_add) > len(reference_list):
+            selected_list_to_add = [option for option, _ in var_list.items() if var.get()]
         else:
             for option,_ in var_list.items():
                 var_list[option].set(False)
-            variable.set(True)
+            variable.set(not variable.get())
             selected_list_to_add.clear()
             selected_list_to_add.append(value)
         print(selected_list_to_add)
+        print(variable.get())
 
         return selected_list_to_add, var_list
     
@@ -174,8 +167,6 @@ class DataVisualisation:
         for coloumn in coloumn_headers:
             if pd.to_numeric(self.csv_df[coloumn], errors="coerce").notnull().all():
                 self.global_compare_headers.append(coloumn)
-            else:
-                pass
     
     def add_labels_handles_legend(self, axis):
         for line in axis.lines:
@@ -183,11 +174,17 @@ class DataVisualisation:
                 handles.append(line)
                 labels.append(line.get_label())         
                 
-    def legend(self, axis):
+    def generate_handles_labels_legend(self, axis):
         handles, labels = plt.gca().get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
         axis.legend(by_label.values(), by_label.keys())
-         
+    
+    def add_handles_labels(self, axis):
+        h, l = axis.get_legend_handles_labels()
+        for handle, label in zip(h, l):
+            if handle not in self.handles:
+                self.handles.append(handle)
+                self.labels.append(label)
     
     
     def plot(self): 
@@ -196,13 +193,17 @@ class DataVisualisation:
             print("Bitte wählen Sie die Achsen")
             return
  
-        fig, ax1 = plt.subplots(figsize=(12, 6))
+        fig, ax1 = plt.subplots(figsize=(16, 6))
         ax1.xaxis.set_major_locator(plt.MaxNLocator(10))
         
         axis_counter=0
         y_axis_label_grouped= ""
-        handles, labels = [], []
+        self.handles, self.labels = [], []
         ax_single_y = ax1.twinx() if len(self.selected_options_menu_y) == 1 else None
+        if len(self.selected_options_menu_y_plot_grouped) > 0:
+            for y in self.selected_options_menu_y_plot_grouped:
+                y_axis_label_grouped += y + "  "
+            print(y_axis_label_grouped)
         for x in self.selected_options_menu_x:
             filtered_data = self.csv_df[self.csv_df['name'] == x]
             self.display_identical_coloumns(filtered_data)
@@ -220,17 +221,11 @@ class DataVisualisation:
                     ax_y.spines['right'].set_position(('outward', 50*axis_counter))
                     ax_y.spines['left'].set_visible(False)
                     ax_y.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
-                    #ax_y.yaxis.set_major_locator(ticker.MultipleLocator(base=len(self.selected_options_menu_x*10)))
                     ax_y.set_ylabel(y)
                     axis_counter += 1
                     
                     ax_y.plot(range(len(x_data)), y_data, label=y)
-                    
-                    h, l = ax_y.get_legend_handles_labels()
-                    for handle, label in zip(h, l):
-                        if handle not in handles:
-                            handles.append(handle)
-                            labels.append(label)
+                    self.add_handles_labels(ax_y)
                     
             elif len(self.selected_options_menu_y) == 1 :
 
@@ -239,32 +234,24 @@ class DataVisualisation:
                     y_data = pd.to_numeric(filtered_data[y])
                     ax_single_y.set_ylabel(y)
                     ax_single_y.plot(range(len(x_data)), y_data, label=x)
-                    h, l = ax_single_y.get_legend_handles_labels()
-                    for handle, label in zip(h, l):
-                        if handle not in handles:
-                            handles.append(handle)
-                            labels.append(label)
+                    self.add_handles_labels(ax_single_y)
 
             for y in self.selected_options_menu_y_plot_grouped:
                 # plot grouped
                 y_data = pd.to_numeric(filtered_data[y])
-                y_axis_label_grouped += y + " "
                 ax1.set_ylabel(y_axis_label_grouped)
-                y_label = (y + " grouped") if len(self.selected_options_menu_y_plot_grouped) > 1 else x
-                ax1.plot(range(len(x_data)), y_data, label=y_label)
-                h, l = ax1.get_legend_handles_labels()
-                for handle, label in zip(h, l):
-                    if handle not in handles:
-                        handles.append(handle)
-                        labels.append(label)
-                
+                y_label_legend = y if len(self.selected_options_menu_y_plot_grouped) > 1 else x
+                ax1.plot(range(len(x_data)), y_data, label=y_label_legend)
+                self.add_handles_labels(ax1)
+                    
+        # wenn kein grouped_x ausgewählt wurde, zeige die linke Achse nicht an
         self.data_table_frame.grid(ipady=10)       
         if not self.selected_options_menu_y_plot_grouped:
             ax1 = ax1.set_yticks([])
         mplcursors.cursor()
         plt.xticks(rotation=35, ha='right')    
         plt.autoscale()
-        plt.legend(handles=handles,labels=labels, loc='upper right')
+        plt.legend(handles=self.handles,labels=self.labels, loc='upper right')
         #self.fig.set_size_inches(20,8)
         self.canvas = FigureCanvasTkAgg(fig, master=self.graph_frame)
         self.canvas.draw()
