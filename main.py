@@ -111,8 +111,8 @@ class DataVisualisation:
             self.selected_options_menu_y_plot_grouped, self.var_list_menu_button_y_plot_grouped = self.change_selected_options(self.selected_options_menu_y_plot_grouped, self.selected_options_menu_x, self.var_list_menu_button_y_plot_grouped, variable, value)
         
     def change_selected_options(self, selected_list_to_add, reference_list, var_list, variable, value):
-        if len(selected_list_to_add) <2 and len(reference_list) < 2 or len(selected_list_to_add) > len(reference_list):
-            selected_list_to_add = [option for option, _ in var_list.items() if var.get()]
+        if len(selected_list_to_add) < 2 and len(reference_list) < 2 or len(selected_list_to_add) > len(reference_list):
+            selected_list_to_add = [option for option, var in var_list.items() if var.get()]
         else:
             for option,_ in var_list.items():
                 var_list[option].set(False)
